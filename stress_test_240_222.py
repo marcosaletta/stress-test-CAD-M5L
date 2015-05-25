@@ -8,12 +8,13 @@ import os
 import random
 import time
 
-if len(sys.argv)<5:
+if len(sys.argv)<6:
 	print 'arg 1 dimesione del centro (grande, medio, piccolo)'
 	print 'arg 2 numero di esami per il centro'
 	print 'arg 3 percorso e nome file lista generale degli esami'
 	print 'arg 4 percorso e file della chiave web-server'
 	print 'arg 5 cartella locale di appoggio per i casi'
+	print 'arg 6 nome per disambiguita casi ripetuti'
 	sys.exit()
 
 dim_centro=sys.argv[1]
@@ -21,6 +22,7 @@ num_esami=sys.argv[2]
 file_lista_gen=sys.argv[3]
 path_chiave_server=sys.argv[4]
 path_dir_loc_casi=sys.argv[5]
+nome_dis=sys.argv[6]
 
 nome_file_lista_cent='lista_centro_'+dim_centro
 file_lista_cent=open(nome_file_lista_cent,'w')
@@ -62,8 +64,8 @@ for riga in lista_cent:
 	os.system("rm -r "+path_dir_loc_casi+riga+"/ROIs")
 	os.system("rm -r "+path_dir_loc_casi+riga+"/logs")
 #rinomino il file e lo zip con + _stress
-	os.system("mv "+path_dir_loc_casi+riga+" "+path_dir_loc_casi+riga+"_stress")
-	os.system("mv "+path_dir_loc_casi+riga+"_stress/M5LC_"+riga+".zip "+path_dir_loc_casi+riga+"_stress/M5LC_"+riga+"_stress.zip")
+	os.system("mv "+path_dir_loc_casi+riga+" "+path_dir_loc_casi+riga+"_stress_"+nome_dis)
+	os.system("mv "+path_dir_loc_casi+riga+"_stress_"+nome_dis+"/M5LC_"+riga+".zip "+path_dir_loc_casi+riga+"_stress_"+nome_dis+"/M5LC_"+riga+"_stress_"+nome_dis+".zip")
 lista_cent.close()
 #fine copia casi estratti su macchina locale
 
@@ -74,10 +76,10 @@ counter=0
 for riga in lista_cent:
 	counter=counter+1
         riga=riga.replace('\n','')
-        os.system("(time scp -r -i "+path_chiave_server+" "+path_dir_loc_casi+riga+"_stress magic5@rdh240xl.to.infn.it:/var/www/drupal7/sites/default/files/casesodl) 2> time_copy_"+riga)
+        os.system("(time scp -r -i "+path_chiave_server+" "+path_dir_loc_casi+riga+"_stress_"+nome_dis+" magic5@rdh240xl.to.infn.it:/var/www/drupal7/sites/default/files/casesodl) 2> time_copy_"+riga)
 #fine copia casi estratti macchina locale -> web server
 #e lancio runM5L_on_cloud
-	os.system("(time ssh -i "+path_chiave_server+" magic5@rdh240xl.to.infn.it '/var/www/html/m5l/sites/all/modules/custom/m5l/runM5L_on_new_cloud.sh "+riga+"_stress /var/www/drupal7/sites/default/files/casesodl') 2>time_exec_"+riga)
+	os.system("(time ssh -i "+path_chiave_server+" magic5@rdh240xl.to.infn.it '/var/www/html/m5l/sites/all/modules/custom/m5l/runM5L_on_new_cloud.sh "+riga+"_stress_"+nome_dis+" /var/www/drupal7/sites/default/files/casesodl') 2>time_exec_"+riga)
 #aspetto prima di passare al successivo
 	if counter<=int(num_esami)-1:
 		time.sleep(int(time_sleep))
